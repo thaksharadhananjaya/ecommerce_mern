@@ -1,10 +1,11 @@
 const express = require('express');
 const app = express();
-require("dotenv/config");
 const mongoose = require("mongoose");
 const helmet = require('helmet');
 const morgan = require('morgan');
-var path = require('path');
+const path = require('path');
+const cors = require('cors');
+require("dotenv/config");
 
 const authRoute = require("./routers/auth_route");
 const categoryRoute = require("./routers/category_route");
@@ -24,6 +25,7 @@ try {
     console.log(error);
 }
 
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public/uploads')))
 app.use(helmet());

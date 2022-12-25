@@ -7,7 +7,7 @@ exports.signup = (req, res) => {
         lastName,
         email,
         password,
-        role
+    
     } = req.body;
 
     const userModel = new AuthModel({
@@ -16,7 +16,37 @@ exports.signup = (req, res) => {
         email,
         password,
         username: Math.random().toString(),
-        role: role || 'user'
+    });
+    // Create user
+    userModel.save((error, data) => {
+        if (error) {
+            if (error.code == 11000)
+                return res.status(400).json({ message: 'Email already used!' })
+            return res.status(400).json(error);
+        }
+        if (data) {
+            return res.status(201).json({
+                message: "User created successful!"
+            })
+        }
+    });
+}
+
+exports.adminSignup = (req, res) => {
+    const {
+        firstName,
+        lastName,
+        email,
+        password,
+    } = req.body;
+
+    const userModel = new AuthModel({
+        firstName,
+        lastName,
+        email,
+        password,
+        username: Math.random().toString(),
+        role: 'admin'
     });
     // Create user
     userModel.save((error, data) => {
@@ -35,7 +65,46 @@ exports.signup = (req, res) => {
 
 exports.signin = (req, res) => {
 
-    AuthModel.findOne({ email: req.body.email }).exec((error, user) => {
+    AuthModel.findOne({ email: req.body.email, role: 'user' }).exec((error, user) => {
+        if (error) {
+            return res.status(400).json(error);
+        }
+        if (user && user.authenticate(req.body.password)) {
+            const { firstName, lastName, email, username, _id, role } = user;
+            const token = jwt.sign({
+                id: user._id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role
+            },
+                process.env.JWT_SECRET,
+                { expiresIn: '1d' }
+            );
+            return res.status(200).json({
+                success: true,
+                token,
+                user: {
+                    _id,
+                    email,
+                    username,
+                    firstName,
+                    lastName,
+                    role
+                }
+            });
+        } else {
+            return res.status(401).json({
+                success: false,
+                message: "Authenticate failed !"
+            });
+        }
+    });
+}
+
+exports.adminSignin = (req, res) => {
+
+    AuthModel.findOne({ email: req.body.email, role: 'admin' }).exec((error, user) => {
         if (error) {
             return res.status(400).json(error);
         }
@@ -94,7 +163,6 @@ exports.updateUserByID = async (req, res) => {
             password,
             oldPassword,
             username,
-            role
         } = req.body;
         try {
             const userModel = AuthModel({
@@ -103,13 +171,12 @@ exports.updateUserByID = async (req, res) => {
                 email,
                 password,
                 username,
-                role: role || 'user'
+                role: req.user.role
             });
-            if (role && role != 'admin' && role != 'user')
-                return res.status(400).json({ message: 'Invalid user role!' });
 
-            if (password && oldPassword)
-                user = await AuthModel.findById(req.params.id);
+
+           /*  if (password && oldPassword)
+                user = await AuthModel.findById(req.params.id); */
 
             if (!password || (oldPassword && user.authenticate(oldPassword))) {
 
@@ -118,7 +185,7 @@ exports.updateUserByID = async (req, res) => {
                     lastName: userModel.lastName,
                     hash_password: userModel.hash_password,
                     username: userModel.username,
-                    role: userModel.role,
+                    //role: userModel.role,
                     email: userModel.email
                 }))
                     return res.status(200).json({ message: 'Update successful!' });
