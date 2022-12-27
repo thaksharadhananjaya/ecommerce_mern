@@ -1,5 +1,6 @@
 import React from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom';
+import axiosInstance from '../../helpers/axios';
 
 /* const PrivateRoute = ({ component: Component, ...rest }) =>{
   return (<Route {...rest} element={(props) => {
@@ -14,10 +15,15 @@ import { Navigate } from 'react-router-dom'
   }} />);
 } */
 
+/* const isValidToken = async ()=>{
+  return await axiosInstance.get('user');
+} */
+
 
 const PrivateRoute = ({ children }) => {
 
   const token = window.localStorage.getItem('token');
+  //const response = isValidToken();
 
   return token ? children : <Navigate replace to='/signin' />;
 }

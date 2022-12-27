@@ -46,7 +46,7 @@ export const login = (user) => {
 export const isUserLoggedIn = () => {
     return async dispatch => {
         const token = localStorage.getItem('token');
-        if(token){
+        if (token) {
             const user = JSON.parse(localStorage.getItem('user'));
             dispatch({
                 type: authActionsType.LOGIN_SUCCESS,
@@ -54,11 +54,43 @@ export const isUserLoggedIn = () => {
                     token, user
                 }
             });
-        }else{
+        } else {
             dispatch({
-                type: authActionsType.LOGIN_FAILURE,
+                type: authActionsType.LOGOUT_SUCCESS,
                 payload: { error: 'Failed to login' }
             });
         }
+    }
+}
+
+export const logout = () => {
+    return async dispatch => {
+        /* dispatch({
+            type: authActionsType.REQUEST_LOGOUT
+        }); */
+        window.localStorage.clear();
+        dispatch({
+            type: authActionsType.LOGOUT_SUCCESS
+        });
+        /* try{
+            const response = await axiosInstance.post('signout');
+            if(response.status===200){
+                window.localStorage.clear();
+                dispatch({
+                    type: authActionsType.LOGOUT_SUCCESS
+                });
+            }else{
+                dispatch({
+                    type: authActionsType.LOGOUT_FAILURE,
+                    payload:{error: 'Logout failed!'}
+                });
+            }
+        }
+        catch(error){
+            dispatch({
+                type: authActionsType.LOGOUT_FAILURE,
+                payload:{error: 'Logout failed!'}
+            });
+        }  */
     }
 }
